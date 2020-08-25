@@ -1,11 +1,13 @@
 # Node Express AWS S3 File Upload
+
 A simple file uploader using:
 
 - aws-sdk
 - multer & multer-s3 
 - AWS.S3.createPresignedPost()
 
-<ul>3 ways of upload can be used:
+3 ways of upload can be used:
+<ul>
   <li><b>"Standard"</b>. Using the server as gateway to send files to the S3 bucket. With multiple files, returning all files info.</li>
   <li><b>With AJAX</b>. Same as previous but using AJAX and filter only image files. Only one file, returning its URL.</li>
   <li><b>Straight from browser</b> (Recommended). Calling the server only to require the <i>Presigned URL</i> used to <i>post</i> to the S3 bucket.
@@ -85,6 +87,17 @@ AWS_DEFAULT_REGION =
 ```
 
 8. Click Save button.
+
+## Install
+
+After cloning the repo, you can start the app by:
+
+```shell
+$ npm install
+$ npm run dev
+```
+
+Open <http://localhost:7000> in your browser to start ussing the app.
 
 ## Resources
 ### How to use S3 POST signed URLs
