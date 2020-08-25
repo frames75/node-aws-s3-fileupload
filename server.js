@@ -1,5 +1,5 @@
-const express = require('express')
-const bodyParser = require('body-parser')
+const express 	= require('express')
+const path 		= require('path');
 require('dotenv').config()
 
 const server = express()
@@ -8,14 +8,12 @@ const server = express()
 console.log('S3 BUCKET', process.env.AWS_S3_BUCKET)
 
 // Middleware Plugins
-server.use(bodyParser.json())
-server.use(express.static('public')) // Just for testing, use a static html
+server.use(express.json());
+server.use(express.urlencoded({ extended: false }));
+server.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-server.use('/', [
-  require('./routes/fileupload')
-])
-
+server.use('/', require('./routes/fileupload'))
 
 // Start the server
 server.listen(7000, error => {

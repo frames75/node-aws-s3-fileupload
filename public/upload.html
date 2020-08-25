@@ -1,5 +1,14 @@
 <html>
   <body>
+    <h1>Example Uploading files to AWS S3</h1>
+
+    <ul>3 ways of upload can be used:
+      <li><b>"Standard"</b>. Using the server as gateway to send files to the S3 bucket. With multiple files, returning all files info.</li>
+      <li><b>With AJAX</b>. Same as previous but using AJAX and filter only image files. Only one file, returning its URL.</li>
+      <li><b>Straight from browser</b> (Recommended). Calling the server only to require the <i>Presigned URL</i> used to <i>post</i> to the S3 bucket.
+    <br><br>
+    <hr>
+    <span>Upload normal - Multiple Files</span>
     <form ref='uploadForm' 
       id='uploadForm' 
       action='http://localhost:7000/upload' 
@@ -8,5 +17,146 @@
         <input type="file" name="inputFile" multiple />
         <input type='submit' value='Upload!' />
     </form>     
+    <br>
+    <hr>
+    <span>Upload with AJAX via Node.js server - Single File</span>
+    <form ref='uploadForm' 
+      id='uploadForm' 
+      action='http://localhost:7000/upload-ajax' 
+      method='post' 
+      encType="multipart/form-data">
+        <input type="file" name="inputFileAJAX" id="inputFileAJAX" />
+        <input type='button' value='Upload with AJAX!' id='but_upload'/>
+    </form>
+    <img class='profile_logo' src='' width="150px" />
+    <br><br>
+    <hr>
+    <span>Upload straight to S3 using <b>Presigned URL Post</b> - Single File</span>
+    <form ref='uploadForm' 
+      id='uploadForm' 
+      action='http://localhost:7000/uploadPresignedPost' 
+      method='GET' 
+      encType="multipart/form-data">
+        <input type="file" name="inputFilePresignedPost" id="inputFilePresignedPost" />
+        <input type='button' value='Upload PresignedPost!' id='but_upload_PresignedPost'/>
+    </form>
+    <img class='profile_logo2' src='' width="150px" />
+
+    <!-- jQuery CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script type="text/javascript">
+      $(document).ready(function(){
+        // Upload with Presigned URL
+        $("#but_upload_PresignedPost").click(async function(){
+          const file = $('#inputFilePresignedPost')[0].files[0];
+
+          if (!file) {
+            alert('You must first select one file');
+            return;
+          }
+
+          // Satinize file name to 16 alphanumerical chars 
+          let filename = file.name.toLowerCase().slice(-16);
+          filename = filename.replace(/([^a-z0-9.]+)/gi, '-');
+          let post_url = new URL($(this).parents('form').attr("action"));
+
+          post_url.searchParams.append("filename", filename);
+
+          // Get the Presigned URL from my server
+          const responsePreURL = await fetch(post_url);
+          if (responsePreURL.ok) {
+            const data = await responsePreURL.json();
+            //alert('Data: ' + JSON.stringify(data));
+
+            // Construct the FormData
+            const formData = new FormData();
+            formData.append("Content-Type", file.type);
+            Object.entries(data.fields).forEach( ([k, v]) => {
+              formData.append(k, v);
+            });
+            formData.append("file", file); // must be the last one
+
+            const responseUpload = await fetch(data.url, {
+              method: "POST",
+              body: formData
+            });
+
+            if (responseUpload.ok) {
+              const logo_url = data.url + '/' + data.fields.key;
+              $(".profile_logo2").attr("src",logo_url); 
+            } else {
+              alert('Error while file was uploading!!');
+            }
+          }
+          else
+            alert('Error GETing PreURL!!');
+        });
+
+        // Upload with AJAX
+        $("#but_upload").click(function(){
+
+          const post_url = $(this).parents('form').attr("action"); 
+          const request_method = $(this).parents('form').attr("method"); 
+
+          const file = $('#inputFileAJAX')[0].files[0];
+
+          if (!file) {
+            alert('You must first select one file');
+            return;
+          }
+
+          const warning_image_formats = 'Warning! Only image files are allowed.\n\n(.jpg, .jpeg, .bmp, .png, .svg)';
+
+          // Check available file ext. (only images)
+          const arr = file.name.split('.');
+          if (arr.length < 2) {
+            alert(warning_image_formats);
+            return;
+          }
+
+          const file_ext = arr[arr.length-1].toLowerCase();
+          switch (file_ext) {
+            case 'jpg':
+            case 'jpeg':
+            case 'bmp':
+            case 'png':
+            case 'svg':
+              break;
+            default:
+              alert(warning_image_formats);
+              return;
+          }
+          
+          // Check limit file size (150 kB)
+          if (file.size > 150000) {
+            alert('Warning! File size must be less than 150 kB.');
+            return;
+          }
+
+          let fd = new FormData();
+          fd.append('inputFileAJAX',file);
+
+          $.ajax({
+            url: post_url,
+            type: request_method,
+            data: fd,
+            contentType: false,
+            processData: false,
+            success: function(response){
+              if(response != 0){
+                $(".profile_logo").attr("src",response); 
+              } else {
+                alert('Error: File not uploaded');
+              }
+            },
+            error: function(err) {
+              alert(err.responseText);
+            }
+          });
+
+        });
+      });
+    </script>
   </body>
 </html>
