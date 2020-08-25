@@ -32,7 +32,9 @@ AWS_DEFAULT_REGION =
 5. Choose Bucket Policy. In the Bucket policy editor text box, type or copy and paste a new bucket policy:
 - Change [[Bucket-Name]] with the name of this bucket.
 - Change [[Id-Account]] with the number or your AWS Id Account.
-- Change [[Some-User]] with the user you'll user to edit the bucket.
+- Change [[Some-User]] with the user you'll use to edit the bucket.
+
+> This *user* doesn't need to have any permission.
 
 ```
 {
@@ -99,6 +101,8 @@ $ npm run dev
 ```
 
 Open <http://localhost:7000> in your browser to start ussing the app.
+
+![example](./public/page-forms.png)
 
 ## Resources
 ### How to use S3 POST signed URLs
