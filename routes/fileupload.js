@@ -1,10 +1,13 @@
 const AWS 		= require('aws-sdk');
-const crypto	= require('crypto');
 const upload 	= require('../multer-s3-fileupload/s3UploadClient').upload
 const uploadAJAX = require('../multer-s3-fileupload/s3UploadClient').uploadAJAX
 const path 		= require('path');
 const express 	= require('express')
 const router 	= express.Router()
+
+// This prefix could be used to delete bucket objets by LifeCycle policy.
+// Ideally this should be set by "tags" on uploading files, but multer-s3 isn't able to do for now.
+const prefixTag = 'some-folder/tmp1d-tagless-';
 
 router.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, '../public/upload.html'));
@@ -37,13 +40,19 @@ router.post('/upload-ajax', (req, res) => {
 router.get('/uploadPresignedPost', (req, res) => {
 	let filename = req.query.filename;
 
-	AWS.config.update({
+	const awsCredentials = {
 		apiVersion: '2006-03-01',
 		accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 		region: process.env.AWS_DEFAULT_REGION,
 		signatureVersion: 'v4'
-	});
+	};
+
+	// AWS.config.update(awsCredentials);
+	// const s3 = new AWS.S3();
+	const s3 = new AWS.S3(awsCredentials);
+
+	//const tags = '<Tagging><TagSet><Tag><Key>Foo</Key><Value>Bar</Value></Tag></TagSet></Tagging>';
 
 	const params = {
 	    Bucket: process.env.AWS_S3_BUCKET,
@@ -57,9 +66,9 @@ router.get('/uploadPresignedPost', (req, res) => {
 	    ]
 	};
 
-	const s3 = new AWS.S3();
 	s3.createPresignedPost(params, (err, data) => {
 	  if (err) {
+	  	console.log('Error createPresignedPost: ', err);
 	    res.status(500).send(err ? err.message : "Error: Presigning post data encountered an error");
 	  } else {
 		//console.log('DATA: ', data);
@@ -70,8 +79,7 @@ router.get('/uploadPresignedPost', (req, res) => {
 });
 
 const getFilenameToBucket = function(filename) {
-	const random_name = crypto.randomBytes(8).toString("hex");
-	return 'some-folder/' + random_name + '-' + filename;
+    return prefixTag + Date.now().toString() + filename;
 }
 
 module.exports = router

@@ -6,7 +6,11 @@
       <li><b>"Standard"</b>. Using the server as gateway to send files to the S3 bucket. With multiple files, returning all files info.</li>
       <li><b>With AJAX</b>. Same as previous but using AJAX and filter only image files. Only one file, returning its URL.</li>
       <li><b>Straight from browser</b> (Recommended). Calling the server only to require the <i>Presigned URL</i> used to <i>post</i> to the S3 bucket.
-    <br><br>
+      </li>
+    </ul>
+    <blockquote>
+      Uploaded file size is limited to 150KB.
+    </blockquote>
     <hr>
     <span>Upload Standard via Node.js server - Multiple Files</span>
     <br><br>
@@ -82,7 +86,7 @@
 
             const responseUpload = await fetch(data.url, {
               method: "POST",
-              body: formData
+              body: formData,
             });
 
             if (responseUpload.ok) {
@@ -93,7 +97,7 @@
             }
           }
           else
-            alert('Error GETing PreURL!!');
+            alert('Error Geting PreURL!!');
         });
 
         // Upload with AJAX
